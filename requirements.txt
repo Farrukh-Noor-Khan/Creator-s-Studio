@@ -1,0 +1,7 @@
+
+coral-protocol-sdk    # The main Coral package
+python-dotenv         # For loading .env variables
+requests              # For making API calls
+mistralai             # Official Mistral client
+moviepy               # **CRITICAL: For simple video generation (Fallback Plan)
+python-multipart      # If building a simple web server
