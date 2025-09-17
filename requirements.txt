@@ -1,5 +1,4 @@
 
-coral-protocol-sdk    # The main Coral package
 python-dotenv         # For loading .env variables
 requests              # For making API calls
 mistralai             # Official Mistral client
