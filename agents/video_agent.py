@@ -1,155 +1,82 @@
 # agents/video_agent.py
-from moviepy.editor import AudioFileClip, ImageClip, TextClip, CompositeVideoClip
+import pygame
 import os
+import subprocess
 
 class VideoAgent:
     def __init__(self):
         self.output_dir = "assets"
+        self.frames_dir = "assets/frames"
+        os.makedirs(self.frames_dir, exist_ok=True)
 
     def generate_video(self, audio_path: str, script_text: str, output_path: str = "assets/final_video.mp4") -> str:
         try:
-            # 1. Load the audio
-            audio = AudioFileClip(audio_path)
-            duration = audio.duration
+            pygame.init()
 
-            # 2. Create a background (a simple color or image)
-            # You can use a static image: background = ImageClip("assets/background.jpg").set_duration(duration)
-            background = ColorClip(size=(1080, 1920), color=(0, 0, 0), duration=duration) # Black background for 9:16 video
+            # Setup Pygame with standard 9:16 resolution
+            width, height = 1080, 1920  # Standard 9:16 for TikTok/YouTube Shorts
+            fps = 24
+            background_color = (0, 0, 0)
+            text_color = (255, 255, 255)
+            font = pygame.font.SysFont('arial', 60, bold=True)  # Larger and bold text
 
-            # 3. Create a text clip with the script
-            # MoviePy's TextClip requires ImageMagick on Linux/Mac. On Windows, it can be tricky.
-            # This is a potential BLOCKER. Let's find a simpler alternative if this fails.
-            txt_clip = TextClip(script_text, fontsize=40, color='white', size=(1000, 800), method='caption').set_duration(duration)
-            txt_clip = txt_clip.set_position('center')
+            screen = pygame.Surface((width, height))
 
-            # 4. Composite everything
-            video = CompositeVideoClip([background, txt_clip])
-            video = video.set_audio(audio)
+            # Get duration from audio
+            probe = subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', audio_path])
+            duration = float(probe)
+            frame_count = int(duration * fps)
 
-            # 5. Write the file
-            video.write_videofile(output_path, fps=24, codec='libx264', audio_codec='aac')
+            # Split script into words for captions
+            words = script_text.split()
+            total_words = len(words)
+            frames_per_word = max(1, frame_count // total_words)  # Minimum 1 frame per word
+
+            # Interactive area
+            interactive_x, interactive_y = width - 300, height - 100
+            interactive_w, interactive_h = 250, 50
+
+            # Generate animated frames with caption-style text
+            current_word_idx = 0
+            for i in range(frame_count):
+                screen.fill(background_color)
+
+                # Display captions: show current word with fade effect
+                if current_word_idx < total_words:
+                    progress = (i % frames_per_word) / frames_per_word
+                    alpha = min(255, int(255 * progress)) if progress < 0.5 else int(255 * (1 - progress))  # Fade in/out
+                    if i % frames_per_word == 0 and i // frames_per_word < total_words:
+                        current_word_idx = i // frames_per_word
+                    if current_word_idx < total_words:
+                        rendered_text = font.render(words[current_word_idx], True, text_color)
+                        rendered_text.set_alpha(alpha)
+                        text_rect = rendered_text.get_rect(center=(width // 2, height // 2 + 150))  # Adjusted position for larger text
+                        screen.blit(rendered_text, text_rect)
+
+                # Interactive cue
+                if i % (fps * 2) < fps:
+                    pygame.draw.rect(screen, (100, 100, 255), (interactive_x, interactive_y, interactive_w, interactive_h), 2)
+                    button_text = font.render("Tap Here!", True, (100, 100, 255))
+                    screen.blit(button_text, (interactive_x + 50, interactive_y + 10))
+
+                pygame.image.save(screen, f"{self.frames_dir}/frame_{i:04d}.png")
+
+            # Use ffmpeg to combine frames into video
+            os.system(f'ffmpeg -framerate {fps} -i {self.frames_dir}/frame_%04d.png -i {audio_path} -c:v libx264 -pix_fmt yuv420p -c:a aac -map 0:v:0 -map 1:a:0 -shortest {output_path}')
+
+            # Clean up
+            for file in os.listdir(self.frames_dir):
+                os.remove(os.path.join(self.frames_dir, file))
+            os.rmdir(self.frames_dir)
+
+            print(f"Video generated: {output_path}")
             return output_path
 
         except Exception as e:
             print(f"❌ Error in VideoAgent: {e}")
-            # ULTIMATE FALLBACK: Just return the audio file. The frontend can display it as an audio player.
             return audio_path
 
 # Test
 if __name__ == "__main__":
     agent = VideoAgent()
-    # You need a test audio file and script
     # agent.generate_video("assets/narration.mp3", "This is a test script text.")
-⚠️ If TextClip doesn't install/run: Abandon it. Your demo can show the audio file and the refined script side-by-side in the UI and talk about the video step as the next logical feature. The core agentic workflow is still proven.
-
-Step 2: The Publisher Agent (Web3 Dev)
-Create agents/publisher_agent.py. Use Crossmint's API to mint an NFT representing the asset.
-
-python
-# agents/publisher_agent.py
-import requests
-import json
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-class PublisherAgent:
-    def __init__(self):
-        self.api_key = os.getenv("CROSSMINT_API_KEY")
-        self.project_id = os.getenv("CROSSMINT_PROJECT_ID")
-        self.headers = {
-            "X-CLIENT-SECRET": self.api_key,
-            "X-PROJECT-ID": self.project_id,
-            "Content-Type": "application/json"
-        }
-        self.base_url = "https://staging.crossmint.com/api"
-
-    def mint_asset_nft(self, recipient: str, metadata: dict):
-        """Mints an NFT on the Solana Devnet"""
-        data = {
-            "recipient": recipient, # e.g., "email:yourtestemail@test.com:solana"
-            "metadata": {
-                "name": "Creator Studio Asset License",
-                "image": "https://avatars.githubusercontent.com/u/158211379?s=200&v=4", # Coral logo or a generic image
-                "description": "This NFT certifies the ownership of a digital asset created by the Creator's Studio Agent.",
-                "attributes": metadata # This is where you put your script hash, video URL, etc.
-            },
-            "compress": False # For faster minting on devnet
-        }
-        try:
-            response = requests.post(
-                f"{self.base_url}/2022-06-09/collections/default/nfts",
-                headers=self.headers,
-                data=json.dumps(data)
-            )
-            response.raise_for_status()
-            result = response.json()
-            print(f"✅ NFT minted! ID: {result['id']}")
-            return result['id']
-        except Exception as e:
-            print(f"❌ Error minting NFT: {e}")
-            return None
-
-# Test
-if __name__ == "__main__":
-    agent = PublisherAgent()
-    test_metadata = {"script": "This is a test script", "date_created": "2025-09-16"}
-    agent.mint_asset_nft("email:yourtestemail@test.com:solana", test_metadata)
-Step 3: Connect the Frontend (Frontend Dev)
-In Lovable.dev, create a simple UI with:
-
-A text area for the raw script input.
-
-A "Generate" button.
-
-A section to display the refined script.
-
-An audio player to play the generated narration.
-
-A link to view the minted NFT.
-
-The frontend will make HTTP POST requests to your Python backend. To enable this, you need to create a simple server. Use FastAPI for this.
-
-Add to requirements.txt:
-
-txt
-fastapi
-uvicorn
-Create main.py in the root:
-
-python
-# main.py
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from core.orchestrator import run_pipeline  # You'll need to create this function
-
-app = FastAPI(title="Creator's Studio Agent API")
-
-# Allow Lovable.dev frontend to talk to this API
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # For the hackathon, this is fine. In production, restrict this.
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class ScriptRequest(BaseModel):
-    text: str
-
-@app.post("/generate")
-async def generate_content(request: ScriptRequest):
-    try:
-        # This function will run the full pipeline and return the paths to the generated assets
-        result = run_pipeline(request.text)
-        return {"message": "Success!", "data": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/")
-def read_root():
-    return {"message": "Creator's Studio Agent API is running!"}
-
-# To run: uvicorn main:app --reload --port 8000
-The Frontend Dev can now point their Lovable.dev project to http://localhost:8000/generate during development.

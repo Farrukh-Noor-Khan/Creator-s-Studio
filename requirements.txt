@@ -1,6 +1,8 @@
-
-python-dotenv         # For loading .env variables
-requests              # For making API calls
-mistralai             # Official Mistral client
-moviepy               # **CRITICAL: For simple video generation (Fallback Plan)
-python-multipart      # If building a simple web server
+python-dotenv          # For loading .env variables
+requests               # For making API calls
+mistralai              # Official Mistral client
+opencv-python          # For video generation (keep for fallback if needed)
+python-multipart       # For FastAPI file uploads (if needed)
+fastapi                # For the backend server
+uvicorn                # To run the FastAPI server
+pygame                 # For animated video generation

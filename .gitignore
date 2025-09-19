@@ -1,0 +1,10 @@
+.env
+assets/*
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.mp3
+*.mp4
+venv/
