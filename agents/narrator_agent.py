@@ -40,4 +40,3 @@ class NarratorAgent:
 if __name__ == "__main__":
     agent = NarratorAgent()
     agent.generate_audio("Hello world! This is a test of our amazing narrator agent.")
-
