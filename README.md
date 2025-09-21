@@ -185,16 +185,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 Built with ❤️ for the Internet of Agents Hackathon @ Solana Skyline.
 
 ```
-
-### **To use this README:**
-
-1.  Copy the entire text above.
-2.  Create a new file in your project's root folder named `README.md`.
-3.  Paste the content.
-4.  **Crucially, replace the placeholder text:**
-    *   `[![Live Demo](...)](http://your-demo-link.com)` - Replace with your actual demo link (if you have one deployed).
-    *   `git clone https://github.com/your-username/creators-studio.git` - Replace with your actual GitHub repository URL.
-    *   Add your team members' names and GitHub profiles in the **Team** section.
-5.  Commit and push this file to your GitHub repository.
-
-This README will serve as a perfect landing page for your project, making it look professional and well-documented.# Creators Studio Agent
