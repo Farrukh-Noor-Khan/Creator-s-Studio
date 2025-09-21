@@ -90,7 +90,7 @@ IMAGEMAGICK_BINARY=C:\Program Files\ImageMagick-7.1.2-Q16-HDRI\magick.exe
 4. Run the Backend Server
 
 ```bash
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port ....
 ```
 
 The API will be available at http://localhost..... Visit http://localhost: for the interactive Swagger/OpenAPI documentation.
