@@ -6,3 +6,8 @@ python-multipart       # For FastAPI file uploads (if needed)
 fastapi                # For the backend server
 uvicorn                # To run the FastAPI server
 pygame                 # For animated video generation
+moviepy               # For video editing and processing
+pydub                  # For audio processing
+ffmpeg-python          # For video processing
+imageio                # For image processing
+imageio-ffmpeg         # For video processing
