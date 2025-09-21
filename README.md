@@ -38,7 +38,7 @@ Creator's Studio is an AI-powered content creation platform that transforms a si
 | **Voice AI** | ElevenLabs |
 | **Video Generation** | MoviePy, ImageMagick |
 | **Blockchain** | Solana, Crossmint API |
-| **Frontend** | React, Tailwind CSS |
+| **Frontend** | React, Tailwind CSS,  (Loveable) |
 
 ## 📦 Installation & Setup
 
